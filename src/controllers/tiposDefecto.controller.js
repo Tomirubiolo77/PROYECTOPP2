@@ -1,36 +1,33 @@
 /**
- * Controlador para la API de Tipos de Defecto
+ * Controlador para el Catálogo de Tipos de Defecto
  * Proyecto: NutriScan - Calidad 4.0
  */
 
 const tiposDefectoService = require('../services/tiposDefecto.service');
 
 /**
- * Lista todos los tipos de defecto registrados en el catálogo maestro
- * GET /api/tipos-defecto
- * Query Params opcionales: ?tipo_envase=FRASCO|LATA
+ * GET /api/tipos-defecto - Listar tipos de defecto
  */
-const listarTiposDefecto = async (req, res, next) => {
+const listar = async (req, res, next) => {
   try {
     const { tipo_envase } = req.query;
 
     if (tipo_envase) {
-      const tipoNormalizado = tipo_envase.toUpperCase();
-      if (!['FRASCO', 'LATA', 'GENERAL'].includes(tipoNormalizado)) {
+      const normalizado = tipo_envase.toUpperCase();
+      if (!['FRASCO', 'LATA'].includes(normalizado)) {
         return res.status(400).json({
           success: false,
-          error: `Parámetro 'tipo_envase' inválido: '${tipo_envase}'. Valores permitidos: 'FRASCO', 'LATA'`
+          error: "Parámetro 'tipo_envase' inválido. Debe ser 'FRASCO' o 'LATA'"
         });
       }
     }
 
-    const defectos = await tiposDefectoService.obtenerTiposDefecto(tipo_envase);
+    const tipos = await tiposDefectoService.obtenerTiposDefecto(tipo_envase);
 
     return res.status(200).json({
       success: true,
-      count: defectos.length,
-      filtro: tipo_envase ? tipo_envase.toUpperCase() : 'TODOS',
-      data: defectos
+      count: tipos.length,
+      data: tipos
     });
   } catch (error) {
     next(error);
@@ -38,33 +35,99 @@ const listarTiposDefecto = async (req, res, next) => {
 };
 
 /**
- * Obtiene el detalle de un tipo de defecto por su ID
- * GET /api/tipos-defecto/:id
+ * GET /api/tipos-defecto/:id - Obtener tipo de defecto por ID
  */
-const obtenerTipoDefectoPorId = async (req, res, next) => {
+const obtenerPorId = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const idNumerico = parseInt(id, 10);
+    const idNum = parseInt(id, 10);
 
-    if (isNaN(idNumerico)) {
+    if (isNaN(idNum)) {
       return res.status(400).json({
         success: false,
-        error: 'El ID proporcionado debe ser un número entero válido.'
+        error: "El parámetro 'id' debe ser un número entero válido"
       });
     }
 
-    const defecto = await tiposDefectoService.obtenerPorId(idNumerico);
+    const tipo = await tiposDefectoService.obtenerPorId(idNum);
 
-    if (!defecto) {
+    if (!tipo) {
       return res.status(404).json({
         success: false,
-        error: `Tipo de defecto con ID ${id} no encontrado en el catálogo.`
+        error: `Tipo de defecto con ID ${idNum} no encontrado`
       });
     }
 
     return res.status(200).json({
       success: true,
-      data: defecto
+      data: tipo
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * POST /api/tipos-defecto - Crear nuevo tipo de defecto (Solo ADMIN)
+ */
+const crear = async (req, res, next) => {
+  try {
+    const { codigo, nombre, tipo_envase, severidad, descripcion } = req.body;
+    const nuevoDefecto = await tiposDefectoService.crearTipoDefecto({
+      codigo,
+      nombre,
+      tipo_envase,
+      severidad,
+      descripcion
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Tipo de defecto creado exitosamente',
+      data: nuevoDefecto
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PUT /api/tipos-defecto/:id - Actualizar tipo de defecto (Solo ADMIN)
+ */
+const actualizar = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { codigo, nombre, tipo_envase, severidad, descripcion } = req.body;
+
+    const actualizado = await tiposDefectoService.actualizarTipoDefecto(id, {
+      codigo,
+      nombre,
+      tipo_envase,
+      severidad,
+      descripcion
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Tipo de defecto actualizado exitosamente',
+      data: actualizado
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * DELETE /api/tipos-defecto/:id - Eliminar tipo de defecto (Solo ADMIN)
+ */
+const eliminar = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const resultado = await tiposDefectoService.eliminarTipoDefecto(id);
+
+    return res.status(200).json({
+      success: true,
+      message: resultado.message
     });
   } catch (error) {
     next(error);
@@ -72,6 +135,9 @@ const obtenerTipoDefectoPorId = async (req, res, next) => {
 };
 
 module.exports = {
-  listarTiposDefecto,
-  obtenerTipoDefectoPorId
+  listar,
+  obtenerPorId,
+  crear,
+  actualizar,
+  eliminar
 };

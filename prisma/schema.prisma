@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model alertas {
+  id            Int          @id @default(autoincrement())
+  inspeccion_id Int
+  nivel         String?      @default("WARN") @db.VarChar(20)
+  mensaje       String       @db.VarChar(255)
+  atendida      Boolean?     @default(false)
+  fecha_hora    DateTime?    @default(now()) @db.Timestamptz(6)
+  inspecciones  inspecciones @relation(fields: [inspeccion_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([inspeccion_id], map: "idx_alertas_inspeccion")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inspecciones {
+  id              Int            @id @default(autoincrement())
+  lote_id         Int
+  tipo_defecto_id Int?
+  usuario_id      Int
+  estado          String         @db.VarChar(20)
+  imagen_url      String?        @db.VarChar(255)
+  observacion     String?        @db.VarChar(255)
+  fecha_hora      DateTime?      @default(now()) @db.Timestamptz(6)
+  alertas         alertas[]
+  lotes           lotes          @relation(fields: [lote_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tipos_defecto   tipos_defecto? @relation(fields: [tipo_defecto_id], references: [id], onUpdate: NoAction)
+  usuarios        usuarios       @relation(fields: [usuario_id], references: [id], onUpdate: NoAction)
+
+  @@index([estado], map: "idx_inspecciones_estado")
+  @@index([fecha_hora], map: "idx_inspecciones_fecha")
+  @@index([lote_id], map: "idx_inspecciones_lote")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model lotes {
+  id                 Int            @id @default(autoincrement())
+  codigo_lote        String         @unique @db.VarChar(50)
+  producto           String         @db.VarChar(100)
+  tipo_envase        String         @db.VarChar(20)
+  fecha_inicio       DateTime?      @default(now()) @db.Timestamptz(6)
+  fecha_fin          DateTime?      @db.Timestamptz(6)
+  estado             String?        @default("EN_PROCESO") @db.VarChar(20)
+  usuario_creador_id Int
+  inspecciones       inspecciones[]
+  usuarios           usuarios       @relation(fields: [usuario_creador_id], references: [id], onUpdate: NoAction)
+
+  @@index([estado], map: "idx_lotes_estado")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tipos_defecto {
+  id           Int            @id @default(autoincrement())
+  codigo       String         @unique @db.VarChar(30)
+  nombre       String         @db.VarChar(100)
+  tipo_envase  String         @db.VarChar(20)
+  severidad    String         @db.VarChar(20)
+  descripcion  String?        @db.VarChar(255)
+  inspecciones inspecciones[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model usuarios {
+  id            Int            @id @default(autoincrement())
+  nombre        String         @db.VarChar(100)
+  email         String         @unique @db.VarChar(100)
+  password_hash String         @db.VarChar(255)
+  rol           String         @db.VarChar(20)
+  activo        Boolean?       @default(true)
+  created_at    DateTime?      @default(now()) @db.Timestamptz(6)
+  inspecciones  inspecciones[]
+  lotes         lotes[]
+}

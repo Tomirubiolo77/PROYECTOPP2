@@ -84,9 +84,9 @@ CREATE INDEX idx_lotes_estado ON lotes(estado);
 
 -- A. Usuarios iniciales (Password de prueba: '123456')
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
-('Operario Línea 01', 'operario@nutriscan.com', '$2b$10$wT8v4y3QjXqYl2pZ7gq7m.9q3h7ZpQ2YVp6v1v4Kx3P9s8L2q1w3e', 'OPERARIO'),
-('Supervisor de Calidad', 'supervisor@nutriscan.com', '$2b$10$wT8v4y3QjXqYl2pZ7gq7m.9q3h7ZpQ2YVp6v1v4Kx3P9s8L2q1w3e', 'SUPERVISOR'),
-('Administrador del Sistema', 'admin@nutriscan.com', '$2b$10$wT8v4y3QjXqYl2pZ7gq7m.9q3h7ZpQ2YVp6v1v4Kx3P9s8L2q1w3e', 'ADMIN');
+('Operario Línea 01', 'operario@nutriscan.com', '$2b$10$9QKeVJMGjFUFMP3bjJaY1eyjPDq.yeyAPqg2n3IFsxdrcrHFtQaCe', 'OPERARIO'),
+('Supervisor de Calidad', 'supervisor@nutriscan.com', '$2b$10$9QKeVJMGjFUFMP3bjJaY1eyjPDq.yeyAPqg2n3IFsxdrcrHFtQaCe', 'SUPERVISOR'),
+('Administrador del Sistema', 'admin@nutriscan.com', '$2b$10$9QKeVJMGjFUFMP3bjJaY1eyjPDq.yeyAPqg2n3IFsxdrcrHFtQaCe', 'ADMIN');
 
 -- B. Catálogo Maestro de Defectos (Frascos y Latas)
 INSERT INTO tipos_defecto (codigo, nombre, tipo_envase, severidad, descripcion) VALUES

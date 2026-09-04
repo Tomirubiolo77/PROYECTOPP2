@@ -1,57 +1,79 @@
 /**
  * Configuración de la aplicación Express
  * Proyecto: NutriScan - Sistema de Inspección y Registro de Calidad 4.0
+ * Seguridad: Helmet, CORS, Rate Limiting, Sanitización y Manejo Centralizado de Errores.
  */
 
-// Importación de módulos de las dependencias
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const morgan = require('morgan');
 
-// Importación de módulos locales
 const apiRoutes = require('./routes/index.routes');
+const errorHandler = require('./middlewares/error.middleware');
+const { apiLimiter } = require('./middlewares/rateLimiter.middleware');
 
-// Inicialización de la aplicación Express
 const app = express();
 
-// Middlewares Globales
-// Se les da permiso a los usuarios de entrar a la API
-// CORS: Permite solicitudes desde cualquier origen
-app.use(cors());
-// JSON: Permite parsear solicitudes con cuerpo en formato JSON
-app.use(express.json());
-// URL-encoded: Permite parsear solicitudes con cuerpo en formato URL-encoded
-app.use(express.urlencoded({ extended: true }));
+// ==========================================
+// 1. Middlewares de Seguridad y Red
+// ==========================================
 
-// Morgan: Muestra información sobre las solicitudes
+// Helmet: Configuración de cabeceras HTTP seguras (XSS, Clickjacking, MIME sniffing, HSTS)
+app.use(helmet());
+
+// CORS: Configuración permisiva pero controlada para el frontend
+app.use(cors({
+  origin: '*', // Se ajustará a la URL del frontend en la Semana 5
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Rate Limiter general para mitigar ataques de denegación de servicio (DoS)
+app.use('/api', apiLimiter);
+
+// Parseo de cuerpo con límite de tamaño para evitar ataques de desbordamiento de memoria (Payload Exhaustion)
+app.use(express.json({ limit: '50kb' }));
+app.use(express.urlencoded({ extended: true, limit: '50kb' }));
+
+// Logging de peticiones HTTP en desarrollo
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Endpoint Raíz Informativo
-// Esto es para probar que la API está funcionando
-// Si no funciona, no se podrá acceder a la API que fue creada para tests
-// Si funciona, se mostrará información sobre la API
+// ==========================================
+// 2. Endpoint Raíz Informativo
+// ==========================================
 app.get('/', (req, res) => {
   res.status(200).json({
     proyecto: 'NutriScan — Sistema de Inspección y Registro de Calidad 4.0',
     kit: 'AVZ-02 — Visión para Control de Calidad',
-    version: '1.0.0',
+    version: '1.4.0 (Semana 04 - Auth, RBAC & Business Logic)',
+    seguridad: 'JWT + RBAC + Helmet + RateLimiter + Prisma ORM',
     endpoints_principales: {
       health: '/api/health',
+      auth_login: 'POST /api/auth/login',
+      auth_perfil: 'GET /api/auth/perfil',
+      lotes: '/api/lotes',
+      lote_activo: '/api/lotes/activo',
+      inspecciones: '/api/inspecciones',
+      inspecciones_por_lote: '/api/inspecciones/lote/:loteId',
       tipos_defecto: '/api/tipos-defecto',
-      tipos_defecto_frasco: '/api/tipos-defecto?tipo_envase=FRASCO',
-      tipos_defecto_lata: '/api/tipos-defecto?tipo_envase=LATA'
+      alertas: '/api/alertas',
+      alertas_metricas: '/api/alertas/metricas'
     },
     status: 'ONLINE'
   });
 });
 
-// Enrutador de la API
+// ==========================================
+// 3. Montaje del Enrutador Principal
+// ==========================================
 app.use('/api', apiRoutes);
 
-// Manejador de rutas no encontradas (404)
-// Si no se encuentra la ruta, se mostrará un mensaje de error
+// ==========================================
+// 4. Manejador de Rutas No Encontradas (404)
+// ==========================================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -59,17 +81,9 @@ app.use((req, res) => {
   });
 });
 
-// Middleware Global de Manejo de Errores (500)
-// En caso de que express falle, se mostrará un mensaje de error
-// Esto es para manejar errores en tiempo de ejecución
-app.use((err, req, res, next) => {
-  console.error('💥 [EXPRESS ERROR]:', err.stack || err.message);
-  const statusCode = err.status || 500;
-  res.status(statusCode).json({
-    success: false,
-    error: err.message || 'Error interno del servidor',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
-});
+// ==========================================
+// 5. Middleware Global de Manejo de Errores
+// ==========================================
+app.use(errorHandler);
 
 module.exports = app;

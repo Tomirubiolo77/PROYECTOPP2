@@ -3,16 +3,21 @@
  * Proyecto: NutriScan - Calidad 4.0
  */
 
+// Pool nos permite tener multiples conexiones a la base de datos sin necesidad de estar creando nuevos clientes a cada rato.
 const { Pool } = require('pg');
 require('dotenv').config();
 
 const connectionString = process.env.DATABASE_URL;
 
+// Con esta variable corroboramos que la url de la db sea correcta y este en el .env definida.
+// En caso contrario nos dara este error fatal y no tendremos acceso a nada en nuestra API, lo cual es esencial para que el sistema funcione.
 if (!connectionString) {
   console.error('❌ ERROR FATAL: La variable de entorno DATABASE_URL no está definida.');
 }
 
 // Configuración del Pool de conexiones optimizado para Neon Serverless
+// Esto quiere decir que el pool estara optimizado para conexiones serverless, lo que significa que se adaptara a las conexiones que vengan de AWS Lambda.
+// Y esto nos permite no estar creando nuevas conexiones a cada rato, lo que nos ahorra tiempo y recursos.
 const pool = new Pool({
   connectionString: connectionString,
   ssl: {
