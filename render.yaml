@@ -1,0 +1,43 @@
+# Configuración de Despliegue en Render (Render Blueprint)
+# Proyecto: NutriScan — Sistema de Inspección y Registro de Calidad 4.0
+
+services:
+  # ========================================================
+  # 1. Backend REST API (Web Service Node.js)
+  # ========================================================
+  - type: web
+    name: nutriscan-backend
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Pegar la URL de PostgreSQL Neon Cloud en el panel de Render
+      - key: JWT_SECRET
+        generateValue: true # Genera automáticamente una clave criptográfica segura
+      - key: JWT_EXPIRES_IN
+        value: 8h
+
+  # ========================================================
+  # 2. Frontend SPA React + Vite (Static Site)
+  # ========================================================
+  - type: web
+    name: nutriscan-frontend
+    runtime: static
+    plan: free
+    region: oregon
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false # Pegar: https://nutriscan-backend.onrender.com/api

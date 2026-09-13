@@ -10,7 +10,11 @@
     "prisma:generate": "prisma generate",
     "prisma:pull": "prisma db pull",
     "test": "node scripts/test-endpoints.js",
-    "test:s4": "node scripts/test-week4.js"
+    "test:s4": "node scripts/test-week4.js",
+    "test:s5": "node scripts/test-week5.js",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:preview": "npm --prefix frontend run preview"
   },
   "keywords": [
     "nutriscan",

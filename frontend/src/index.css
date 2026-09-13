@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 font-sans min-h-screen overflow-x-hidden;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08), transparent 45%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 32px 32px, 32px 32px;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #06b6d4;
+}
+
+/* Camera Target Reticle animations */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(1000%);
+  }
+}
+
+.animate-scanline {
+  animation: scanline 3s linear infinite;
+}
+
+/* Tactile Industrial Button Shadows */
+.btn-tactile {
+  box-shadow: 0 4px 0 #0f172a, 0 8px 16px rgba(0, 0, 0, 0.4);
+  transition: all 0.1s ease-in-out;
+}
+
+.btn-tactile:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #0f172a, 0 3px 6px rgba(0, 0, 0, 0.4);
+}
