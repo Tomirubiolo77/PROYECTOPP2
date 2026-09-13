@@ -3,7 +3,17 @@
  * Maneja inyección de Bearer Token, parseo de JSON, y captura global de errores HTTP (401, 403, 500)
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// Normalización robusta de la URL base para evitar errores comunes (barras al final o falta de /api)
+const normalizeApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  url = url.trim().replace(/\/+$/, ''); // Quita barras al final
+  if (!url.endsWith('/api')) {
+    url = `${url}/api`;
+  }
+  return url;
+};
+
+const API_BASE_URL = normalizeApiUrl();
 
 /**
  * Función base para peticiones HTTP
@@ -11,7 +21,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
  * @param {object} options - Opciones de fetch (method, body, headers, etc.)
  */
 export const request = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const cleanEndpoint = endpoint.replace(/^\/+/, '');
+  const url = `${API_BASE_URL}/${cleanEndpoint}`;
 
   // 1. Obtener token de autenticación de localStorage
   const token = localStorage.getItem('nutriscan_token');
