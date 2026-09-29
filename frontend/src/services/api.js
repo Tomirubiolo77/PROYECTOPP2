@@ -130,6 +130,11 @@ export const lotesService = {
       method: 'GET',
     });
   },
+  cerrar: async (id) => {
+    return await request(`/lotes/${id}/cerrar`, {
+      method: 'PATCH',
+    });
+  },
   finalizar: async (id) => {
     return await request(`/lotes/${id}/finalizar`, {
       method: 'PATCH',

@@ -280,8 +280,10 @@ export const SupervisorDashboardPage = () => {
         filtroEstado={filtroEstado}
         onCambiarFiltroLote={setFiltroLote}
         onCambiarFiltroEstado={setFiltroEstado}
+        onAtenderAlerta={handleAtenderAlerta}
         onRefrescar={cargarDashboard}
         cargando={loading}
+        userRole="SUPERVISOR"
       />
 
       {/* Modal de Apertura de Lote */}

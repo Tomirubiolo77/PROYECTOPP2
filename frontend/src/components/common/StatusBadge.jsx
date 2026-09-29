@@ -26,6 +26,20 @@ export const StatusBadge = ({ type, value }) => {
         label: 'EN PROCESO',
       };
     }
+    if (val === 'PENDIENTE_CIERRE') {
+      return {
+        bg: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
+        dot: 'bg-amber-400 animate-pulse',
+        label: 'PENDIENTE DE CIERRE',
+      };
+    }
+    if (val === 'DETENIDO') {
+      return {
+        bg: 'bg-rose-500/10 border-rose-500/30 text-rose-400',
+        dot: 'bg-rose-400',
+        label: 'DETENIDO',
+      };
+    }
     if (val === 'FINALIZADO') {
       return {
         bg: 'bg-slate-700/30 border-slate-600/40 text-slate-300',

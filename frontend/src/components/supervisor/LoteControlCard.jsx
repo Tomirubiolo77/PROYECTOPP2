@@ -6,7 +6,11 @@ import {
   StopCircle, 
   PlusCircle, 
   Calendar, 
-  AlertCircle 
+  AlertCircle,
+  FileCheck,
+  Check,
+  Clock,
+  CheckCircle2
 } from 'lucide-react';
 
 export const LoteControlCard = ({
@@ -23,11 +27,21 @@ export const LoteControlCard = ({
     setConfirmandoCierre(false);
   };
 
+  const esPendienteCierre = lote && lote.estado === 'PENDIENTE_CIERRE';
+
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+    <div className={`border rounded-2xl p-5 shadow-xl transition-all ${
+      esPendienteCierre
+        ? 'bg-amber-950/20 border-amber-500/50 shadow-glow-amber'
+        : 'bg-slate-900 border-slate-800'
+    }`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div className="flex items-center space-x-3">
-          <div className="p-2.5 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400">
+          <div className={`p-2.5 rounded-xl border ${
+            esPendienteCierre
+              ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
+              : 'bg-cyan-500/10 border-cyan-500/30 rounded-xl text-cyan-400'
+          }`}>
             <Package className="w-6 h-6" />
           </div>
           <div>
@@ -48,15 +62,15 @@ export const LoteControlCard = ({
           {lote ? (
             confirmandoCierre ? (
               <div className="flex items-center space-x-2 w-full sm:w-auto animate-in fade-in">
-                <span className="text-xs text-rose-400 font-mono font-medium">
-                  ¿Confirmar fin de turno?
+                <span className="text-xs text-emerald-400 font-mono font-medium">
+                  {esPendienteCierre ? '¿Aprobar y dar visto bueno?' : '¿Confirmar cierre de turno?'}
                 </span>
                 <button
                   onClick={handleConfirmarFinalizar}
                   disabled={procesando}
-                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold rounded-lg transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold rounded-lg transition-colors cursor-pointer"
                 >
-                  SÍ, CERRAR
+                  SÍ, APROBAR
                 </button>
                 <button
                   onClick={() => setConfirmandoCierre(false)}
@@ -66,6 +80,15 @@ export const LoteControlCard = ({
                   CANCELAR
                 </button>
               </div>
+            ) : esPendienteCierre ? (
+              <button
+                onClick={() => setConfirmandoCierre(true)}
+                disabled={procesando}
+                className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-400/40 rounded-xl text-xs font-mono font-bold transition-all shadow-glow-emerald cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                <span>DAR VISTO BUENO Y APROBAR CIERRE</span>
+              </button>
             ) : (
               <button
                 onClick={() => setConfirmandoCierre(true)}
@@ -98,6 +121,16 @@ export const LoteControlCard = ({
         </div>
       </div>
 
+      {/* Banner de Revisión y Visto Bueno si está PENDIENTE_CIERRE */}
+      {esPendienteCierre && (
+        <div className="mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs font-mono flex items-center space-x-3">
+          <Clock className="w-5 h-5 flex-shrink-0 text-amber-400 animate-pulse" />
+          <span>
+            <strong>El Operario ha cerrado este lote:</strong> Revise los resultados de inspección, rechazos y alertas atendidas. Si todo es conforme, haga clic en <strong>Dar Visto Bueno y Aprobar Cierre</strong> para finalizarlo formalmente.
+          </span>
+        </div>
+      )}
+
       {/* Detalles del lote en curso */}
       {lote ? (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
@@ -108,7 +141,7 @@ export const LoteControlCard = ({
           <div>
             <span className="text-[10px] font-mono uppercase text-slate-500 block">Apertura</span>
             <span className="text-xs font-mono text-slate-300">
-              {new Date(lote.created_at || Date.now()).toLocaleTimeString()}
+              {new Date(lote.fecha_inicio || lote.created_at || Date.now()).toLocaleTimeString()}
             </span>
           </div>
           <div>
@@ -119,9 +152,11 @@ export const LoteControlCard = ({
           </div>
           <div>
             <span className="text-[10px] font-mono uppercase text-slate-500 block">Estado Operativo</span>
-            <span className="text-xs font-mono text-emerald-400 flex items-center space-x-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>EN INSPECCIÓN</span>
+            <span className={`text-xs font-mono flex items-center space-x-1 ${
+              esPendienteCierre ? 'text-amber-400' : 'text-emerald-400'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${esPendienteCierre ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400 animate-pulse'}`} />
+              <span>{esPendienteCierre ? 'PENDIENTE DE APROBACIÓN' : 'EN INSPECCIÓN'}</span>
             </span>
           </div>
         </div>

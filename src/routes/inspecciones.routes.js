@@ -20,8 +20,8 @@ router.post('/', validateCrearInspeccion, inspeccionesController.registrarInspec
 // GET /api/inspecciones/lote/:loteId - Consultar historial e indicadores por lote (OPERARIO, SUPERVISOR, ADMIN)
 router.get('/lote/:loteId', inspeccionesController.historialPorLote);
 
-// GET /api/inspecciones - Listado global para auditoría e informes (SUPERVISOR, ADMIN)
-router.get('/', authorizeRoles('SUPERVISOR', 'ADMIN'), inspeccionesController.listarInspecciones);
+// GET /api/inspecciones - Listado global para auditoría e informes (OPERARIO, SUPERVISOR, ADMIN)
+router.get('/', authorizeRoles('OPERARIO', 'SUPERVISOR', 'ADMIN'), inspeccionesController.listarInspecciones);
 
 // GET /api/inspecciones/:id - Detalle de inspección individual
 router.get('/:id', inspeccionesController.obtenerPorId);

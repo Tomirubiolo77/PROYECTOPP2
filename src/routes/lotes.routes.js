@@ -26,7 +26,10 @@ router.get('/:id', lotesController.obtenerPorId);
 // POST /api/lotes - Apertura de lote (Solo SUPERVISOR y ADMIN)
 router.post('/', authorizeRoles('SUPERVISOR', 'ADMIN'), validateCrearLote, lotesController.crearLote);
 
-// PATCH /api/lotes/:id/finalizar - Cierre de lote (Solo SUPERVISOR y ADMIN)
+// PATCH /api/lotes/:id/cerrar - Cierre de lote por operario (pasa a PENDIENTE_CIERRE)
+router.patch('/:id/cerrar', authorizeRoles('OPERARIO', 'SUPERVISOR', 'ADMIN'), lotesController.cerrarLote);
+
+// PATCH /api/lotes/:id/finalizar - Cierre de lote / Visto bueno final (Solo SUPERVISOR y ADMIN)
 router.patch('/:id/finalizar', authorizeRoles('SUPERVISOR', 'ADMIN'), lotesController.finalizarLote);
 
 module.exports = router;

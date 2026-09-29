@@ -78,7 +78,9 @@ const obtenerLotes = async ({ estado, tipo_envase } = {}) => {
  * @returns {Promise<object|null>}
  */
 const obtenerLoteActivo = async (tipo_envase) => {
-  const where = { estado: 'EN_PROCESO' };
+  const where = {
+    estado: { in: ['EN_PROCESO', 'PENDIENTE_CIERRE'] }
+  };
 
   if (tipo_envase) {
     where.tipo_envase = tipo_envase.toUpperCase();
@@ -149,7 +151,53 @@ const obtenerPorId = async (id) => {
 };
 
 /**
- * Finaliza un lote de producción (cierre de turno o partida)
+ * Cierre de lote iniciado por el Operario (o Supervisor) - Queda pendiente de aprobación
+ * @param {number} id
+ * @param {number} usuarioId
+ * @returns {Promise<object>}
+ */
+const cerrarLote = async (id, usuarioId) => {
+  const loteId = parseInt(id, 10);
+
+  const loteExistente = await prisma.lotes.findUnique({
+    where: { id: loteId }
+  });
+
+  if (!loteExistente) {
+    const error = new Error(`Lote con ID ${loteId} no encontrado`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (loteExistente.estado === 'FINALIZADO') {
+    const error = new Error(`El lote '${loteExistente.codigo_lote}' ya se encuentra finalizado`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (loteExistente.estado === 'PENDIENTE_CIERRE') {
+    const error = new Error(`El lote '${loteExistente.codigo_lote}' ya fue cerrado y está pendiente de aprobación de Supervisión`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const loteActualizado = await prisma.lotes.update({
+    where: { id: loteId },
+    data: {
+      estado: 'PENDIENTE_CIERRE'
+    },
+    include: {
+      usuarios: {
+        select: { id: true, nombre: true, rol: true }
+      }
+    }
+  });
+
+  return loteActualizado;
+};
+
+/**
+ * Finaliza un lote de producción (cierre de turno o visto bueno del supervisor)
  * @param {number} id
  * @returns {Promise<object>}
  */
@@ -177,6 +225,11 @@ const finalizarLote = async (id) => {
     data: {
       estado: 'FINALIZADO',
       fecha_fin: new Date()
+    },
+    include: {
+      usuarios: {
+        select: { id: true, nombre: true, rol: true }
+      }
     }
   });
 
@@ -188,5 +241,6 @@ module.exports = {
   obtenerLotes,
   obtenerLoteActivo,
   obtenerPorId,
+  cerrarLote,
   finalizarLote
 };

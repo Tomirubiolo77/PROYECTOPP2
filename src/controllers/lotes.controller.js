@@ -88,7 +88,24 @@ const obtenerPorId = async (req, res, next) => {
 };
 
 /**
- * PATCH /api/lotes/:id/finalizar - Cerrar lote de producción
+ * PATCH /api/lotes/:id/cerrar - Cierre de lote por operario (pasa a PENDIENTE_CIERRE)
+ */
+const cerrarLote = async (req, res, next) => {
+  try {
+    const loteCerrado = await lotesService.cerrarLote(req.params.id, req.user?.id);
+
+    return res.status(200).json({
+      success: true,
+      message: `Lote '${loteCerrado.codigo_lote}' cerrado por el operario. En espera de visto bueno de Supervisión.`,
+      data: loteCerrado
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/lotes/:id/finalizar - Cerrar lote de producción / Visto bueno final
  */
 const finalizarLote = async (req, res, next) => {
   try {
@@ -109,5 +126,6 @@ module.exports = {
   listarLotes,
   obtenerLoteActivo,
   obtenerPorId,
+  cerrarLote,
   finalizarLote
 };

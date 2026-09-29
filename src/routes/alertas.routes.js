@@ -16,11 +16,11 @@ router.use(authenticateToken);
 // GET /api/alertas/metricas - Resumen de alertas para el dashboard (SUPERVISOR, ADMIN)
 router.get('/metricas', authorizeRoles('SUPERVISOR', 'ADMIN'), alertasController.metricas);
 
-// GET /api/alertas - Listar alertas (SUPERVISOR, ADMIN)
-router.get('/', authorizeRoles('SUPERVISOR', 'ADMIN'), alertasController.listarAlertas);
+// GET /api/alertas - Listar alertas (OPERARIO, SUPERVISOR, ADMIN)
+router.get('/', authorizeRoles('OPERARIO', 'SUPERVISOR', 'ADMIN'), alertasController.listarAlertas);
 
 // GET /api/alertas/:id - Detalle de alerta individual
-router.get('/:id', authorizeRoles('SUPERVISOR', 'ADMIN'), alertasController.obtenerPorId);
+router.get('/:id', authorizeRoles('OPERARIO', 'SUPERVISOR', 'ADMIN'), alertasController.obtenerPorId);
 
 // PATCH /api/alertas/:id/atender - Atender alerta (SUPERVISOR, ADMIN)
 router.patch('/:id/atender', authorizeRoles('SUPERVISOR', 'ADMIN'), alertasController.atenderAlerta);
