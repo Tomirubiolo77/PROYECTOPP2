@@ -94,18 +94,24 @@ export const BandejaAlertas = ({
             <div
               key={alerta.id}
               className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
-                !alerta.atendida
-                  ? 'bg-rose-950/10 hover:bg-rose-950/20'
+                !alerta.atendida && alerta.nivel === 'CRITICA'
+                  ? 'bg-rose-950/30 border-l-4 border-l-rose-500 hover:bg-rose-950/40'
+                  : !alerta.atendida
+                  ? 'bg-amber-950/15 border-l-4 border-l-amber-500 hover:bg-amber-950/25'
                   : 'bg-slate-900/50 hover:bg-slate-800/40 opacity-75'
               }`}
             >
               <div className="flex items-start space-x-3">
                 <div className={`p-2 rounded-xl border mt-0.5 ${
                   alerta.nivel === 'CRITICA'
-                    ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                    ? 'bg-red-500/10 border-red-500/40 text-red-400 animate-pulse'
                     : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                 }`}>
-                  <AlertTriangle className="w-4 h-4" />
+                  {alerta.nivel === 'CRITICA' ? (
+                    <ShieldAlert className="w-4 h-4 text-rose-400" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-amber-400" />
+                  )}
                 </div>
 
                 <div>
@@ -120,20 +126,24 @@ export const BandejaAlertas = ({
                         <span>ATENDIDA</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center space-x-1 text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full animate-pulse">
+                      <span className={`inline-flex items-center space-x-1 text-[10px] font-mono px-2 py-0.5 rounded-full animate-pulse ${
+                        alerta.nivel === 'CRITICA'
+                          ? 'text-rose-300 bg-rose-500/20 border border-rose-500/40 font-bold'
+                          : 'text-amber-400 bg-amber-500/10 border border-amber-500/20'
+                      }`}>
                         <Clock className="w-3 h-3" />
-                        <span>REQUIERE ATENCIÓN</span>
+                        <span>{alerta.nivel === 'CRITICA' ? '🚨 PARADA / CRÍTICA' : 'REQUIERE ATENCIÓN'}</span>
                       </span>
                     )}
                   </div>
 
-                  <p className="text-xs text-slate-300 mt-1 font-mono">
+                  <p className="text-xs text-slate-200 mt-1 font-mono font-medium">
                     {alerta.mensaje}
                   </p>
 
-                  <div className="flex items-center space-x-4 mt-1.5 text-[11px] font-mono text-slate-500">
+                  <div className="flex items-center space-x-4 mt-1.5 text-[11px] font-mono text-slate-400">
                     <span>
-                      Hora: {new Date(alerta.created_at || Date.now()).toLocaleString()}
+                      Hora: {new Date(alerta.fecha_hora || alerta.created_at || Date.now()).toLocaleString()}
                     </span>
                     {alerta.inspeccion_id && (
                       <span>Inspección vinculada: #{alerta.inspeccion_id}</span>
@@ -147,10 +157,20 @@ export const BandejaAlertas = ({
                 <button
                   onClick={() => handleAtender(alerta.id)}
                   disabled={atendiendoId === alerta.id}
-                  className="flex items-center space-x-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-glow-emerald disabled:opacity-50 flex-shrink-0 cursor-pointer"
+                  className={`flex items-center space-x-2 px-4 py-2 text-white rounded-xl text-xs font-mono font-bold transition-all shadow-lg disabled:opacity-50 flex-shrink-0 cursor-pointer ${
+                    alerta.nivel === 'CRITICA'
+                      ? 'bg-rose-600 hover:bg-rose-500 shadow-glow-rose'
+                      : 'bg-emerald-600 hover:bg-emerald-500 shadow-glow-emerald'
+                  }`}
                 >
                   <CheckCircle className="w-4 h-4" />
-                  <span>{atendiendoId === alerta.id ? 'ATENDIENDO...' : 'ATENDER ALERTA'}</span>
+                  <span>
+                    {atendiendoId === alerta.id
+                      ? 'PROCESANDO...'
+                      : alerta.nivel === 'CRITICA'
+                      ? '🛠️ ATENDER Y RESOLVER'
+                      : 'ATENDER ALERTA'}
+                  </span>
                 </button>
               ) : (
                 <span className="text-xs font-mono text-slate-500 italic pr-2">

@@ -12,6 +12,7 @@ const tiposDefectoRoutes = require('./tiposDefecto.routes');
 const lotesRoutes = require('./lotes.routes');
 const inspeccionesRoutes = require('./inspecciones.routes');
 const alertasRoutes = require('./alertas.routes');
+const dashboardRoutes = require('./dashboard.routes');
 
 // Subrutas API RESTful
 router.use('/health', healthRoutes);
@@ -20,5 +21,6 @@ router.use('/tipos-defecto', tiposDefectoRoutes);
 router.use('/lotes', lotesRoutes);
 router.use('/inspecciones', inspeccionesRoutes);
 router.use('/alertas', alertasRoutes);
+router.use('/dashboard', dashboardRoutes);
 
 module.exports = router;

@@ -82,8 +82,11 @@ const registrarInspeccion = async ({
 
     // B. Si es RECHAZADO, disparar registro en tabla 'alertas'
     if (estado === 'RECHAZADO') {
-      const nivelAlerta = defecto.severidad === 'CRITICA' ? 'CRITICA' : 'WARN';
-      const mensajeAlerta = `Falla detectada [${defecto.codigo}] ${defecto.nombre} en ${lote.tipo_envase} (Lote: ${lote.codigo_lote})`;
+      const esEmergencia = observacion && (observacion.includes('PARADA') || observacion.includes('EMERGENCIA') || observacion.includes('ATASCAMIENTO'));
+      const nivelAlerta = (esEmergencia || defecto.severidad === 'CRITICA') ? 'CRITICA' : 'WARN';
+      const mensajeAlerta = esEmergencia
+        ? (observacion.length > 250 ? observacion.substring(0, 250) : observacion)
+        : `Falla detectada [${defecto.codigo}] ${defecto.nombre} en ${lote.tipo_envase} (Lote: ${lote.codigo_lote})`;
 
       alertaGenerada = await tx.alertas.create({
         data: {

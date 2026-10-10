@@ -16,6 +16,7 @@ import {
 export const LoteControlCard = ({
   lote,
   onFinalizarLote,
+  onReanudarLote,
   onAbrirModalNuevoLote,
   procesando = false,
 }) => {
@@ -28,17 +29,22 @@ export const LoteControlCard = ({
   };
 
   const esPendienteCierre = lote && lote.estado === 'PENDIENTE_CIERRE';
+  const esDetenido = lote && lote.estado === 'DETENIDO';
 
   return (
     <div className={`border rounded-2xl p-5 shadow-xl transition-all ${
-      esPendienteCierre
+      esDetenido
+        ? 'bg-rose-950/20 border-rose-500/50 shadow-glow-rose'
+        : esPendienteCierre
         ? 'bg-amber-950/20 border-amber-500/50 shadow-glow-amber'
         : 'bg-slate-900 border-slate-800'
     }`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div className="flex items-center space-x-3">
           <div className={`p-2.5 rounded-xl border ${
-            esPendienteCierre
+            esDetenido
+              ? 'bg-rose-500/10 border-rose-500/40 text-rose-400'
+              : esPendienteCierre
               ? 'bg-amber-500/10 border-amber-500/40 text-amber-400'
               : 'bg-cyan-500/10 border-cyan-500/30 rounded-xl text-cyan-400'
           }`}>
@@ -80,6 +86,15 @@ export const LoteControlCard = ({
                   CANCELAR
                 </button>
               </div>
+            ) : esDetenido ? (
+              <button
+                onClick={() => onReanudarLote && onReanudarLote(lote.id)}
+                disabled={procesando}
+                className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white border-2 border-emerald-400/40 rounded-xl text-xs font-mono font-bold transition-all shadow-glow-emerald cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                <span>ATENDER Y REANUDAR LÍNEA</span>
+              </button>
             ) : esPendienteCierre ? (
               <button
                 onClick={() => setConfirmandoCierre(true)}
@@ -120,6 +135,16 @@ export const LoteControlCard = ({
           )}
         </div>
       </div>
+
+      {/* Banner de Parada de Emergencia si está DETENIDO */}
+      {esDetenido && (
+        <div className="mt-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-mono flex items-center space-x-3">
+          <StopCircle className="w-5 h-5 flex-shrink-0 text-rose-400 animate-pulse" />
+          <span>
+            <strong>🚨 PARADA DE EMERGENCIA EN LÍNEA:</strong> La producción está detenida. El operario ha reportado un incidente crítico. Verifique la causa y haga clic en <strong>Atender y Reanudar Línea</strong> para habilitar la continuidad del proceso.
+          </span>
+        </div>
+      )}
 
       {/* Banner de Revisión y Visto Bueno si está PENDIENTE_CIERRE */}
       {esPendienteCierre && (

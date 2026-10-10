@@ -62,13 +62,16 @@ Desarrollar un sistema de software local/cloud (**NutriScan**) que capture las i
 
 ### 8. Panel de Estado y Trazabilidad
 
-* **Semana Académica:** Semana 5 / 10 (Transición hacia Frontend)
+* **Semana Académica:** Semana 7 / 10 (Funcionalidad KIT 4.0 AVZ-02 validada)
 * **Estado General:** **🟢 AL DÍA**
-* **Riesgo del MVP:** **🟢 BAJO** (Backend completo con Prisma ORM, Auth JWT, RBAC, lógica transaccional de lotes/inspecciones/alertas y pruebas al 100%).
-* **Puntaje Acumulado Provisorio:** **45 / 100 puntos** (S1: 10 + S2: 15 + S3: 8 + S4: 12)
+* **Riesgo del MVP:** **🟢 BAJO** (Puesto de visión inteligente KIT AVZ-02 operativo con dataset visual, tandas automáticas, actuadores de rechazo físico, reglas de parada de emergencia, cierre de lote con visto bueno y auditoría agrupada. 34 tests S7 y 52 tests S6 pasando al 100%).
+* **Puntaje Acumulado Provisorio:** **76 / 100 puntos** (S1: 10 + S2: 15 + S3: 8 + S4: 12 + S5: 15 + S6: 8 + S7: 8)
 * **Matriz de Entregas:**
-  * **Semana 01 (Problema y Requisitos):** 🟢 COMPLETO / EVIDENCIADO
-  * **Semana 02 (Análisis y Diseño):** 🟢 COMPLETO / EVIDENCIADO (Casos de uso, DER PostgreSQL Neon, Wireframes Figma).
-  * **Semana 03 (BD y Backend Inicial):** 🟢 COMPLETO / EVIDENCIADO (Script DDL en Neon, Connection Pool 'pg', Express base y endpoints probados al 100%).
-  * **Semana 04 (Backend y Lógica de Negocio):** 🟢 COMPLETO / EVIDENCIADO (Prisma ORM, Auth JWT, RBAC, lógica transaccional, Helmet, RateLimiting y tests automatizados).
-  * **Semana 05 (Frontend y UI/UX):** ⚪ PRÓXIMA (React + Vite + Tailwind CSS + AuthContext).
+  * **Semana 01 (Problema y Requisitos):** 🟢 COMPLETO / EVIDENCIADO (10/10 pts)
+  * **Semana 02 (Análisis y Diseño):** 🟢 COMPLETO / EVIDENCIADO (15/15 pts)
+  * **Semana 03 (BD y Backend Inicial):** 🟢 COMPLETO / EVIDENCIADO (8/8 pts)
+  * **Semana 04 (Backend y Lógica de Negocio):** 🟢 COMPLETO / EVIDENCIADO (12/12 pts)
+  * **Semana 05 (Frontend y UI/UX):** 🟢 COMPLETO / EVIDENCIADO (15/15 pts)
+  * **Semana 06 (Integración Fullstack y Flujo E2E):** 🟢 COMPLETO / EVIDENCIADO (8/8 pts)
+  * **Semana 07 (Funcionalidad KIT 4.0 - Simulador AVZ-02):** 🟢 COMPLETO / EVIDENCIADO (8/8 pts)
+  * **Semana 08 (Reportes, KPIs y Dashboards):** ⚪ PRÓXIMA (4 pts)

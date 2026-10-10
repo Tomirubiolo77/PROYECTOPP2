@@ -121,11 +121,52 @@ const finalizarLote = async (req, res, next) => {
   }
 };
 
+/**
+ * PATCH /api/lotes/:id/detener - Detener lote por parada de emergencia (OPERARIO, SUPERVISOR, ADMIN)
+ */
+const detenerLote = async (req, res, next) => {
+  try {
+    const { motivo } = req.body;
+    const resultado = await lotesService.detenerLote(req.params.id, {
+      motivo,
+      usuario_id: req.user?.id
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Línea de producción detenida por emergencia en lote '${resultado.lote.codigo_lote}'`,
+      data: resultado.lote,
+      alerta: resultado.alerta
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/lotes/:id/reanudar - Reanudar lote detenido (Solo SUPERVISOR y ADMIN)
+ */
+const reanudarLote = async (req, res, next) => {
+  try {
+    const loteReanudado = await lotesService.reanudarLote(req.params.id, req.user?.id);
+
+    return res.status(200).json({
+      success: true,
+      message: `Línea reanudada exitosamente por el Supervisor en lote '${loteReanudado.codigo_lote}'`,
+      data: loteReanudado
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   crearLote,
   listarLotes,
   obtenerLoteActivo,
   obtenerPorId,
   cerrarLote,
-  finalizarLote
+  finalizarLote,
+  detenerLote,
+  reanudarLote
 };

@@ -121,6 +121,26 @@ export const OperarioEstacionPage = () => {
     cargarDefectos();
   }, [cargarLoteActivo, cargarDefectos]);
 
+  // Polling automático mientras el lote esté DETENIDO para reactivación por el Supervisor
+  useEffect(() => {
+    if (!loteActivo || loteActivo.estado !== 'DETENIDO') return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await lotesService.getActivo(tipoEnvase);
+        if (res && res.success && res.data && res.data.estado === 'EN_PROCESO') {
+          setLoteActivo(res.data);
+          mostrarToast('✅ El Supervisor atendió la parada y autorizó la reanudación de la línea', 'success');
+          await cargarLoteActivo();
+        }
+      } catch (e) {
+        console.error('Error al sondear reactivación de línea:', e);
+      }
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, [loteActivo, tipoEnvase, cargarLoteActivo]);
+
   // Simulación: Pieza Conforme (APROBADO)
   const handlePiezaConforme = async () => {
     if (!loteActivo || loteActivo.estado !== 'EN_PROCESO') return;
@@ -184,27 +204,16 @@ export const OperarioEstacionPage = () => {
     });
   };
 
-  // Notificar al Supervisor ante Parada de Emergencia
+  // Notificar al Supervisor ante Parada de Emergencia y Detener Línea
   const handleNotificarParadaEmergencia = async ({ motivo, tipo, envase }) => {
     if (!loteActivo) return;
 
     try {
-      // Buscar defecto crítico para asociar a la alerta de emergencia
-      const defectoCritico = defectosDisponibles.find(d => d.severidad === 'CRITICA') || defectosDisponibles[0];
-      const defectoId = defectoCritico ? defectoCritico.id : null;
-
-      const payload = {
-        lote_id: loteActivo.id,
-        tipo_defecto_id: defectoId,
-        estado: 'RECHAZADO',
-        observacion: `🚨 PARADA DE EMERGENCIA: ${motivo}`,
-        imagen_url: `/simulador/parada_${tipo.toLowerCase()}.png`
-      };
-
-      const response = await inspeccionesService.registrar(payload);
-      if (response && response.success) {
-        mostrarToast('🚨 Parada de emergencia notificada al Supervisor con alerta crítica', 'error');
-        await cargarMetricasLote(loteActivo.id);
+      // 1. Detener formalmente el lote en el backend (crea alerta crítica y cambia estado a DETENIDO)
+      const res = await lotesService.detener(loteActivo.id, motivo || `Parada de emergencia por ${tipo}`);
+      if (res && res.success) {
+        mostrarToast('🚨 Parada de emergencia notificada: Línea bloqueada en espera del Supervisor', 'error');
+        await cargarLoteActivo();
       }
     } catch (err) {
       mostrarToast(`Error al notificar parada: ${err.message}`, 'error');
@@ -307,7 +316,9 @@ export const OperarioEstacionPage = () => {
         <LoadingSpinner text="Sincronizando lote en proceso..." />
       ) : loteActivo ? (
         <div className={`border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 transition-colors ${
-          loteActivo.estado === 'PENDIENTE_CIERRE'
+          loteActivo.estado === 'DETENIDO'
+            ? 'bg-rose-950/20 border-rose-500/40'
+            : loteActivo.estado === 'PENDIENTE_CIERRE'
             ? 'bg-amber-950/20 border-amber-500/40'
             : 'bg-slate-900/60 border-cyan-500/20'
         }`}>
@@ -328,7 +339,7 @@ export const OperarioEstacionPage = () => {
               Línea: <strong className="text-slate-200">{loteActivo.tipo_envase}</strong>
             </span>
 
-            {/* Botón de Cierre de Lote para Operario */}
+            {/* Acciones de Lote para Operario */}
             {loteActivo.estado === 'EN_PROCESO' ? (
               <button
                 onClick={() => setModalCerrarLoteAbierto(true)}
@@ -337,6 +348,11 @@ export const OperarioEstacionPage = () => {
                 <StopCircle className="w-4 h-4" />
                 <span>CERRAR LOTE (FIN DE TURNO)</span>
               </button>
+            ) : loteActivo.estado === 'DETENIDO' ? (
+              <span className="px-3 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-xl text-xs font-mono flex items-center space-x-1.5 ml-2 animate-pulse">
+                <StopCircle className="w-3.5 h-3.5 text-rose-400" />
+                <span>LÍNEA DETENIDA — Esperando reanudación del Supervisor</span>
+              </span>
             ) : loteActivo.estado === 'PENDIENTE_CIERRE' ? (
               <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl text-xs font-mono flex items-center space-x-1.5 ml-2">
                 <Clock className="w-3.5 h-3.5 text-amber-400" />

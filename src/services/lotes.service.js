@@ -79,7 +79,7 @@ const obtenerLotes = async ({ estado, tipo_envase } = {}) => {
  */
 const obtenerLoteActivo = async (tipo_envase) => {
   const where = {
-    estado: { in: ['EN_PROCESO', 'PENDIENTE_CIERRE'] }
+    estado: { in: ['EN_PROCESO', 'PENDIENTE_CIERRE', 'DETENIDO'] }
   };
 
   if (tipo_envase) {
@@ -236,11 +236,162 @@ const finalizarLote = async (id) => {
   return loteActualizado;
 };
 
+/**
+ * Detiene un lote de producción por parada de emergencia (OPERARIO, SUPERVISOR, ADMIN)
+ * Pasa el estado a 'DETENIDO' y genera la alerta crítica operativa.
+ * @param {number} id
+ * @param {object} param1
+ * @returns {Promise<object>}
+ */
+const detenerLote = async (id, { motivo, usuario_id } = {}) => {
+  const loteId = parseInt(id, 10);
+
+  const loteExistente = await prisma.lotes.findUnique({
+    where: { id: loteId }
+  });
+
+  if (!loteExistente) {
+    const error = new Error(`Lote con ID ${loteId} no encontrado`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (loteExistente.estado === 'FINALIZADO') {
+    const error = new Error(`El lote '${loteExistente.codigo_lote}' ya se encuentra finalizado`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const motivoDetalle = motivo || 'Parada de emergencia reportada en línea de producción';
+
+  // Buscar última inspección de este lote para asociar la alerta
+  let ultimaInspeccion = await prisma.inspecciones.findFirst({
+    where: { lote_id: loteId },
+    orderBy: { id: 'desc' }
+  });
+
+  // Si no hay inspección previa, creamos una inspección representativa del evento de parada
+  if (!ultimaInspeccion) {
+    const defectoCritico = await prisma.tipos_defecto.findFirst({
+      where: {
+        OR: [
+          { tipo_envase: loteExistente.tipo_envase },
+          { tipo_envase: 'GENERAL' }
+        ],
+        severidad: 'CRITICA'
+      }
+    });
+
+    ultimaInspeccion = await prisma.inspecciones.create({
+      data: {
+        lote_id: loteId,
+        tipo_defecto_id: defectoCritico ? defectoCritico.id : null,
+        usuario_id: usuario_id || loteExistente.usuario_creador_id,
+        estado: 'RECHAZADO',
+        observacion: `🚨 PARADA DE LÍNEA: ${motivoDetalle}`,
+        imagen_url: `/simulador/parada_emergencia.png`
+      }
+    });
+  }
+
+  // Crear la alerta crítica vinculada al evento de parada
+  const alertaCritica = await prisma.alertas.create({
+    data: {
+      inspeccion_id: ultimaInspeccion.id,
+      nivel: 'CRITICA',
+      mensaje: `🚨 PARADA DE LÍNEA [${loteExistente.codigo_lote}]: ${motivoDetalle}`,
+      atendida: false
+    }
+  });
+
+  // Transicionar lote a DETENIDO
+  const loteActualizado = await prisma.lotes.update({
+    where: { id: loteId },
+    data: {
+      estado: 'DETENIDO'
+    },
+    include: {
+      usuarios: {
+        select: { id: true, nombre: true, rol: true }
+      }
+    }
+  });
+
+  return {
+    lote: loteActualizado,
+    alerta: alertaCritica
+  };
+};
+
+/**
+ * Reanuda un lote de producción detenido (Solo SUPERVISOR y ADMIN)
+ * Vuelve el estado a 'EN_PROCESO' y marca como atendidas las alertas críticas del lote.
+ * @param {number} id
+ * @param {number} usuario_id
+ * @returns {Promise<object>}
+ */
+const reanudarLote = async (id, usuario_id) => {
+  const loteId = parseInt(id, 10);
+
+  const loteExistente = await prisma.lotes.findUnique({
+    where: { id: loteId }
+  });
+
+  if (!loteExistente) {
+    const error = new Error(`Lote con ID ${loteId} no encontrado`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (loteExistente.estado === 'FINALIZADO') {
+    const error = new Error(`El lote '${loteExistente.codigo_lote}' ya se encuentra finalizado`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Resolver alertas críticas pendientes asociadas al lote
+  const inspeccionesLote = await prisma.inspecciones.findMany({
+    where: { lote_id: loteId },
+    select: { id: true }
+  });
+
+  const inspeccionIds = inspeccionesLote.map(i => i.id);
+
+  if (inspeccionIds.length > 0) {
+    await prisma.alertas.updateMany({
+      where: {
+        inspeccion_id: { in: inspeccionIds },
+        atendida: false
+      },
+      data: {
+        atendida: true
+      }
+    });
+  }
+
+  // Devolver el estado a EN_PROCESO
+  const loteActualizado = await prisma.lotes.update({
+    where: { id: loteId },
+    data: {
+      estado: 'EN_PROCESO'
+    },
+    include: {
+      usuarios: {
+        select: { id: true, nombre: true, rol: true }
+      }
+    }
+  });
+
+  return loteActualizado;
+};
+
 module.exports = {
   crearLote,
   obtenerLotes,
   obtenerLoteActivo,
   obtenerPorId,
   cerrarLote,
-  finalizarLote
+  finalizarLote,
+  detenerLote,
+  reanudarLote
 };

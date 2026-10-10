@@ -71,12 +71,24 @@ export const CamaraSimulator = ({
     };
   }, []);
 
-  // Detener tanda automática si el lote deja de estar en proceso
+  // Detener tanda automática y sincronizar parada de emergencia según estado del lote
   useEffect(() => {
     if (!loteActivo || loteActivo.estado !== 'EN_PROCESO') {
       detenerTanda();
     }
-  }, [loteActivo]);
+
+    if (loteActivo?.estado === 'DETENIDO') {
+      if (!paradaEmergencia) {
+        setParadaEmergencia({
+          tipo: 'DETENIDO',
+          motivo: 'Línea de producción detenida: Parada de emergencia activa en planta'
+        });
+        setNotificacionSupervisorEnviada(true);
+      }
+    } else if (loteActivo?.estado === 'EN_PROCESO' && paradaEmergencia && notificacionSupervisorEnviada) {
+      reactivarLinea();
+    }
+  }, [loteActivo, paradaEmergencia, notificacionSupervisorEnviada]);
 
   // Selección de mecanismo de rechazo aleatorio entre los 3 pedidos por la cátedra
   const dispararMecanismoRechazo = (nombreDefecto) => {
@@ -500,32 +512,36 @@ export const CamaraSimulator = ({
               {paradaEmergencia.motivo}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              {!notificacionSupervisorEnviada ? (
-                <button
-                  onClick={handleNotificarSupervisor}
-                  disabled={notificandoSupervisor}
-                  className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono font-bold text-xs flex items-center space-x-2 shadow-lg transition-transform active:scale-95 cursor-pointer disabled:opacity-50"
-                >
-                  <Bell className="w-4 h-4 text-slate-950" />
-                  <span>
-                    {notificandoSupervisor ? 'Enviando Alerta Crítica...' : '📢 NOTIFICAR AL SUPERVISOR'}
-                  </span>
-                </button>
+            <div className="flex flex-col sm:flex-row gap-3 items-center">
+              {!notificacionSupervisorEnviada && loteActivo?.estado !== 'DETENIDO' ? (
+                <>
+                  <button
+                    onClick={handleNotificarSupervisor}
+                    disabled={notificandoSupervisor}
+                    className="px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono font-bold text-xs flex items-center space-x-2 shadow-lg transition-transform active:scale-95 cursor-pointer disabled:opacity-50"
+                  >
+                    <Bell className="w-4 h-4 text-slate-950" />
+                    <span>
+                      {notificandoSupervisor ? 'Enviando Alerta Crítica...' : '📢 NOTIFICAR AL SUPERVISOR'}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={reactivarLinea}
+                    className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs flex items-center space-x-2 border border-slate-600 transition-colors cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4 text-cyan-400" />
+                    <span>Despejar Alarma Local</span>
+                  </button>
+                </>
               ) : (
-                <div className="p-2.5 rounded-xl bg-emerald-950/80 border border-emerald-500 text-emerald-300 text-xs font-mono flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span>Alerta crítica remitida a Supervisión. Esperando atención...</span>
+                <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-500/60 text-rose-300 text-xs font-mono flex items-center space-x-2 text-left">
+                  <Clock className="w-4 h-4 text-rose-400 animate-pulse flex-shrink-0" />
+                  <span>
+                    🔒 <strong>Línea bloqueada por seguridad:</strong> Alerta crítica remitida al Supervisor. Solo el Supervisor de Calidad puede autorizar la reanudación desde su panel.
+                  </span>
                 </div>
               )}
-
-              <button
-                onClick={reactivarLinea}
-                className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs flex items-center space-x-2 border border-slate-600 transition-colors cursor-pointer"
-              >
-                <RotateCcw className="w-4 h-4 text-cyan-400" />
-                <span>Despejar y Reactivar Línea</span>
-              </button>
             </div>
           </div>
         )}

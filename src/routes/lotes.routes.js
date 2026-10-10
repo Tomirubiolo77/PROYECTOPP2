@@ -29,6 +29,12 @@ router.post('/', authorizeRoles('SUPERVISOR', 'ADMIN'), validateCrearLote, lotes
 // PATCH /api/lotes/:id/cerrar - Cierre de lote por operario (pasa a PENDIENTE_CIERRE)
 router.patch('/:id/cerrar', authorizeRoles('OPERARIO', 'SUPERVISOR', 'ADMIN'), lotesController.cerrarLote);
 
+// PATCH /api/lotes/:id/detener - Parada de emergencia / detener línea (OPERARIO, SUPERVISOR, ADMIN)
+router.patch('/:id/detener', authorizeRoles('OPERARIO', 'SUPERVISOR', 'ADMIN'), lotesController.detenerLote);
+
+// PATCH /api/lotes/:id/reanudar - Reanudar línea detenida (Solo SUPERVISOR y ADMIN)
+router.patch('/:id/reanudar', authorizeRoles('SUPERVISOR', 'ADMIN'), lotesController.reanudarLote);
+
 // PATCH /api/lotes/:id/finalizar - Cierre de lote / Visto bueno final (Solo SUPERVISOR y ADMIN)
 router.patch('/:id/finalizar', authorizeRoles('SUPERVISOR', 'ADMIN'), lotesController.finalizarLote);
 

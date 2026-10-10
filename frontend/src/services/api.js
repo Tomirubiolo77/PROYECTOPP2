@@ -135,6 +135,17 @@ export const lotesService = {
       method: 'PATCH',
     });
   },
+  detener: async (id, motivo) => {
+    return await request(`/lotes/${id}/detener`, {
+      method: 'PATCH',
+      body: { motivo },
+    });
+  },
+  reanudar: async (id) => {
+    return await request(`/lotes/${id}/reanudar`, {
+      method: 'PATCH',
+    });
+  },
   finalizar: async (id) => {
     return await request(`/lotes/${id}/finalizar`, {
       method: 'PATCH',
@@ -228,6 +239,31 @@ export const alertasService = {
   atender: async (id) => {
     return await request(`/alertas/${id}/atender`, {
       method: 'PATCH',
+    });
+  },
+};
+
+export const dashboardService = {
+  kpis: async (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.lote_id) searchParams.append('lote_id', params.lote_id);
+    if (params.tipo_envase) searchParams.append('tipo_envase', params.tipo_envase);
+    if (params.fecha_desde) searchParams.append('fecha_desde', params.fecha_desde);
+    if (params.fecha_hasta) searchParams.append('fecha_hasta', params.fecha_hasta);
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return await request(`/dashboard/kpis${qs}`, {
+      method: 'GET',
+    });
+  },
+  graficos: async (params = {}) => {
+    const searchParams = new URLSearchParams();
+    if (params.lote_id) searchParams.append('lote_id', params.lote_id);
+    if (params.tipo_envase) searchParams.append('tipo_envase', params.tipo_envase);
+    if (params.fecha_desde) searchParams.append('fecha_desde', params.fecha_desde);
+    if (params.fecha_hasta) searchParams.append('fecha_hasta', params.fecha_hasta);
+    const qs = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    return await request(`/dashboard/graficos${qs}`, {
+      method: 'GET',
     });
   },
 };

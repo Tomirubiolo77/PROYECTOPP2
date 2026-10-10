@@ -14,6 +14,7 @@
     "test:s5": "node scripts/test-week5.js",
     "test:s6": "node scripts/test-week6.js",
     "test:s7": "node scripts/test-week7.js",
+    "test:s8": "node scripts/test-week8.js",
     "simulador": "node scripts/simulador-kit.js",
     "frontend:dev": "npm --prefix frontend run dev",
     "frontend:build": "npm --prefix frontend run build",
